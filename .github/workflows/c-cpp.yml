@@ -1,0 +1,28 @@
+name: C/C++ Build
+
+on:
+  push:
+    branches: [ "main" ]
+  pull_request:
+    branches: [ "main" ]
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+    - uses: actions/checkout@v4
+
+    - name: Install build tools
+      run: |
+        sudo apt update
+        sudo apt install -y build-essential g++ > /dev/null
+
+    - name: Build project
+      run: g++ -o prog main.cpp
+
+    - name: Upload binary
+      uses: actions/upload-artifact@v4
+      with:
+        name: prog
+        path: ./prog
