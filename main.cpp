@@ -15,7 +15,9 @@ int main(int argc, char *argv[]) {
     }
 
     // uncomment below line if you need printout extraction
-    //_debug(extract(file));
+    //_debug(extract(file, argv[1]));
+
+    fclose(file);
 
     return 0;
 }

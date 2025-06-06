@@ -19,18 +19,37 @@ struct _test {
     int wafer_num;
 };
 
-_test extract(FILE *test_subject) {
+_test extract(FILE *test_subject, char *filenmae) {
     _test extracted;
     extracted.wafer_num = -1;
     const std::string se = "******************************************************************************************************\n",
     test_value_s = "|____________________________________________________________________________________________________|\n",
     test_value_e = "|_________________________|__________|________|__________|__________|__________|__________|__________|\n",
-    wafer = "Пластина №  ";
+    filename = "V434-0021-";
     const char test_value_spliter = '|';
     char buffer[256];
     bool is_end = false, is_value = false;
     unsigned int count = 0;
     
+    std::string wafle = "";
+    int namestart = 0;
+    for (int i = 0; filenmae[i] != '\0'; i++){
+        if(filenmae[i] == '/') {
+            namestart = i+1;
+        }
+    }
+    for (int i = namestart; filenmae[i] != '\0'; i++){
+        if(filenmae[i] == '.') {
+            break;
+        }
+        else if(filenmae[i] != filename[i-namestart] && filenmae[i] != '\0' && filenmae[i] != '0') {
+            wafle += filenmae[i];
+        }
+    }
+    if(wafle != "") {
+        extracted.wafer_num = std::stoi(wafle);
+    }
+
     while(fgets(buffer, sizeof(buffer), test_subject)) {
         if(is_value) {
             int coloumn = 0;
@@ -61,29 +80,6 @@ _test extract(FILE *test_subject) {
             extracted.extracted_tables.push_back(to_push);
         }
         is_value = false;
-        if(extracted.wafer_num == -1) {
-            for (int i = 0; i < 256; i++){
-                if(buffer[i] == wafer[0]) {
-                    bool f = true;
-                    for (int j = 0; j < wafer.size(); j++){
-                        if(buffer[i] != wafer[j]) {
-                            f = !f;
-                            break;
-                        }
-                         i++;
-                    }
-                    if(f) {
-                        for(int j = 0; j < 10; j++){
-                            if (buffer[i+j] == ' ') {
-                                break;
-                            }
-                            extracted.wafer_num += (buffer[i+j]-47)*pow(10, j);
-                        }
-                        break;
-                    }
-                }
-            }
-        }
         if(std::string(buffer) == se && !is_end) {
             is_end = true;
         }
@@ -95,7 +91,6 @@ _test extract(FILE *test_subject) {
         }
     }
 
-    fclose(test_subject);
     return extracted;
 }
 
