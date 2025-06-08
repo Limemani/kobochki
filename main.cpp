@@ -31,48 +31,43 @@ int main(int argc, char* argv[]) {
 
         fprintf(csv, "%s\n", header);
 #ifdef _WIN32
-            WIN32_FIND_DATA findFileData;
-            HANDLE hFind;
+        std::string search_path = std::string(argv[1]) + "\\*";
+        WIN32_FIND_DATAA fd;
+        HANDLE hFind = FindFirstFileA(search_path.c_str(), &fd);
 
-            std::string searchPath = std::string(argv[1]) + "\\*";
+        if(hFind == INVALID_HANDLE_VALUE) {
+            fprintf(stderr, "Unable to open directory: %s\n", argv[1]);
+            return 1;
+        }
 
-            hFind = FindFirstFile(searchPath.c_str(), &findFileData);
-            if (hFind == INVALID_HANDLE_VALUE) {
-                perror("Unable to open directory");
-                return 1;
-            }
-            const char* name = findFileData.cFileName;
+        do {
+            if(fd.dwFileAttributes & FILE_ATTRIBUTE_DIRECTORY)
+                continue;
 
-            if (name[0] == '.') continue;
+            std::string filename = fd.cFileName;
 
-            printf("%s\n", name);
-
-            std::string filename(name);
-            if (filename.find("V434-0021-") != std::string::npos) {
+            if(filename.find("V434-0021-") != std::string::npos) {
                 std::string filepath = std::string(argv[1]) + "\\" + filename;
-
-                FILE* file = fopen(filepath.c_str(), "r");
-                if (!file) {
-                    perror(("Cannot open file " + filepath).c_str());
+                FILE *file = fopen(filepath.c_str(), "r");
+                if (!file){
+                    perror("Cannot open file");
                     exit(1);
                 }
 
-                _test test = extract(file, (char*)name);
+                _test test = extract(file, fd.cFileName);
 
                 if(argc > 2) {
-                    printf("%s\n", entry->d_name);
+                    printf("%s\n", fd.cFileName);
                     if(strcmp(argv[2], "-d") == 0 || strcmp(argv[2], "-df") == 0) {
                         _debug(test, (strcmp(argv[2], "-df") == 0));
                     }
                 }
 
                 fprintf(csv, "%s\n", proccesData(test).c_str());
-
                 fclose(file);
-            } while (FindNextFile(hFind, &findFileData) != 0);
-
-            FindClose(hFind);
-            
+            }
+        } while(FindNextFileA(hFind, &fd));
+        FindClose(hFind);
 #else
 
         DIR *dir = opendir(argv[1]);
