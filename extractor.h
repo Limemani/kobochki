@@ -18,9 +18,7 @@ struct _test {
 _test extract(FILE *test_subject, char *filenmae) {
     _test extracted;
     extracted.wafer_num = -1;
-    const std::string se = "******************************************************************************************************\n",
-    test_value_s = "|____________________________________________________________________________________________________|\n",
-    test_value_e = "|_________________________|__________|________|__________|__________|__________|__________|__________|\n";
+    const std::string test_value_s = "|____________________________________________________________________________________________________|\r\n";
     const char test_value_spliter = '|';
     char buffer[256];
     bool is_end = false, is_value = false;
@@ -47,6 +45,7 @@ _test extract(FILE *test_subject, char *filenmae) {
     }
 
     while(fgets(buffer, sizeof(buffer), test_subject)) {
+        std::string l = std::string(buffer);
         if(is_value) {
             int coloumn = 0;
             std::string buf2[8] = {};
@@ -54,7 +53,7 @@ _test extract(FILE *test_subject, char *filenmae) {
                 if(coloumn == 8){
                     break;
                 }
-                if(buffer[i] == '|') {
+                if(buffer[i] == test_value_spliter) {
                     coloumn++;
                 }
                 else if(buffer[i] == ' ' && buffer[i+1] != ' ' && buffer[i-1] != ' ' ) {
@@ -70,13 +69,7 @@ _test extract(FILE *test_subject, char *filenmae) {
             extracted.extracted_tables.push_back(to_push);
         }
         is_value = false;
-        if(std::string(buffer) == se && !is_end) {
-            is_end = true;
-        }
-        else if(is_end && std::string(buffer) == se) {
-            count++;
-        }
-        else if (is_end && std::string(buffer) == test_value_s){
+        if (std::string(buffer) == test_value_s){
             is_value = true;
         }
     }
