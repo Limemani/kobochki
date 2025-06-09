@@ -7,6 +7,7 @@
 
 struct tabel {
     std::string test_name;
+    std::string exit;
     std::string resualt;
 };
 
@@ -20,8 +21,10 @@ _test extract(FILE *test_subject, char *filenmae) {
     extracted.wafer_num = -1;
 #ifdef _WIN32
     const std::string test_value_s = "|____________________________________________________________________________________________________|\n";
+    const std::string test_value_e = "|_________________________|__________|________|__________|__________|__________|__________|__________|\n";
 #else
     const std::string test_value_s = "|____________________________________________________________________________________________________|\r\n";
+    const std::string test_value_e = "|_________________________|__________|________|__________|__________|__________|__________|__________|\r\n";
 #endif
     const char test_value_spliter = '|';
     char buffer[256];
@@ -50,6 +53,9 @@ _test extract(FILE *test_subject, char *filenmae) {
 
     while(fgets(buffer, sizeof(buffer), test_subject)) {
         std::string l = std::string(buffer);
+        if (std::string(buffer) == test_value_e){
+            is_value = false;
+        }
         if(is_value) {
             int coloumn = 0;
             std::string buf2[8] = {};
@@ -69,10 +75,10 @@ _test extract(FILE *test_subject, char *filenmae) {
             }
             tabel to_push;
             to_push.test_name = buf2[0];
+            to_push.exit = buf2[2];
             to_push.resualt = buf2[7];
             extracted.extracted_tables.push_back(to_push);
         }
-        is_value = false;
         if (std::string(buffer) == test_value_s){
             is_value = true;
         }
