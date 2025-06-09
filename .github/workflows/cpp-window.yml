@@ -1,0 +1,71 @@
+name: C/C++ Build Windows
+
+on:
+  workflow_dispatch:
+    inputs:
+      build_target:
+        description: 'Build method'
+        required: true
+        default: 'linux-cross'
+        type: choice
+        options:
+          - linux-cross
+          - windows-native
+          - auto-fallback
+
+jobs:
+  linux-cross:
+    if: ${{ github.event.inputs.build_target == 'linux-cross' }}
+    runs-on: [self-hosted, linux-cross]
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install MinGW-w64
+        run: |
+          sudo apt update
+          sudo apt install -y mingw-w64
+      - name: Build (Linux Cross)
+        run: x86_64-w64-mingw32-g++ -static-libgcc -static-libstdc++ -static -o prog.exe main.cpp
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: prog-linux-cross
+          path: prog.exe
+
+  windows-native:
+    if: ${{ github.event.inputs.build_target == 'windows-native' }}
+    runs-on: [self-hosted, windows-native]
+
+    steps:
+      - uses: actions/checkout@v4
+      
+      - name: Build (Windows Native)
+        run: g++ -static-libgcc -static-libstdc++ -static -o prog.exe main.cpp
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: prog-windows-native
+          path: prog.exe
+
+  fallback:
+    if: ${{ github.event.inputs.build_target == 'auto-fallback' }}
+    runs-on: windows-latest
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install MinGW
+        run: choco install -y mingw
+
+      - name: Add MinGW to PATH
+        shell: powershell
+        run: echo "C:\ProgramData\chocolatey\lib\mingw\tools\install\mingw64\bin" >> $env:GITHUB_PATH
+
+      - name: Build (Fallback GitHub-hosted Windows)
+        run: g++ -static-libgcc -static-libstdc++ -static -o prog.exe main.cpp
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: prog-fallback
+          path: prog.exe

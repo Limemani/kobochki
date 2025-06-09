@@ -18,7 +18,11 @@ struct _test {
 _test extract(FILE *test_subject, char *filenmae) {
     _test extracted;
     extracted.wafer_num = -1;
+#ifdef _WIN32
+    const std::string test_value_s = "|____________________________________________________________________________________________________|\n";
+#else
     const std::string test_value_s = "|____________________________________________________________________________________________________|\r\n";
+#endif
     const char test_value_spliter = '|';
     char buffer[256];
     bool is_end = false, is_value = false;
